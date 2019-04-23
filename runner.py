@@ -1,11 +1,12 @@
 import os
 import random
 import string
+import pprint
 
 def breakDownVideo(origVideo, fps):
 	#Generates random output name and processes 480p, x fps video to downgradedVideos/foo.mp4
 	randomName = str(''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(10)]))
-	downResStr = 'ffmpeg -i rawVideos/' + origVideo + ' -s hd480 -c:v libx264 -r '+ fps +' -crf 23 -c:a aac -strict -2 downgradedVideos/' + randomName + '.mp4'
+	downResStr = 'ffmpeg -i ' + origVideo + ' -s hd480 -c:v libx264 -r '+ fps +' -crf 23 -c:a aac -strict -2 downgradedVideos/' + randomName + '.mp4'
 	os.system(downResStr)
 
 	#extracts all frames to frames/foo.jpg
@@ -22,11 +23,20 @@ def assembleVideo(randomName, fps):
 	framesFolderName = randomName + '_frames'
 	assembleStr ='ffmpeg -framerate ' + fps + ' -i frames/' + framesFolderName + '/thumb%04d.jpg assembledVideos/' + randomName + '.mp4'
 	os.system(assembleStr)
-	return 'Saved output video as assembledVideos/' + randomName + '.mp4'
+	return randomName + '.mp4'
+
+#def comparePixels(pixel_1data, pixel_2data):
 
 
-origVideo = raw_input("Name of original video (with extension): ")
-fps = raw_input("Input frames per second as integer: ")
 
-fileName = breakDownVideo(origVideo, fps)
-print assembleVideo(fileName, fps)
+videoData = { }
+
+videoData['originalVideo'] = 'rawVideos/' + str(raw_input("Name of original video (with extension): "))
+videoData['fps'] = raw_input("Input frames per second as integer: ")
+videoData['assignedKey'] = breakDownVideo(videoData['originalVideo'], videoData['fps'])
+videoData['downGradedVideo'] = 'downgradedVideos/' + videoData['assignedKey'] + '.mp4'
+videoData['framesFolder'] = 'frames/' + videoData['assignedKey'] + '_frames'
+videoData['assembledVideo'] = 'assembledVideos/' + assembleVideo(videoData['assignedKey'], videoData['fps'])
+
+#output info about video
+pprint.pprint(videoData)
