@@ -2,6 +2,7 @@ import os
 import random
 import string
 import pprint
+from PIL import Image
 
 def breakDownVideo(origVideo, fps):
 	#Generates random output name and processes 480p, x fps video to downgradedVideos/foo.mp4
@@ -21,13 +22,33 @@ def breakDownVideo(origVideo, fps):
 def assembleVideo(randomName, fps):
 	#finds frames and builds video into assembledVideos/foo.mp4
 	framesFolderName = randomName + '_frames'
-	assembleStr ='ffmpeg -framerate ' + fps + ' -i frames/' + framesFolderName + '/thumb%04d.jpg assembledVideos/' + randomName + '.mp4'
+	assembleStr ='ffmpeg -r ' + fps + ' -i modifiedFrames/' + framesFolderName + '/thumb%04d.jpg assembledVideos/' + randomName + '.mp4'
+	# ffmpeg -r 60 -f image2 -s 1920x1080 -i pic%04d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p test.mp4
 	os.system(assembleStr)
 	return randomName + '.mp4'
-
+#/home/steven/projects/diy_motion_tracker/modifiedFrames
 #def comparePixels(pixel_1data, pixel_2data):
 
+def manipulateImagePixels(randomName):
+	framesFolderName = randomName + '_frames'
+	os.system('mkdir modifiedFrames/' + framesFolderName)
+	for filename in os.listdir('frames/'+framesFolderName):
+		file, extension = os.path.splitext(filename)
+		im = Image.open('frames/'+framesFolderName+'/'+filename, 'r')
+		pix = im.load()
+		pix_val = list(im.getdata())
+		width, height = im.size
+		for i in range(0, width):
+			for j in range(0, height):
+				currentRGBList = list(pix_val[j*(width) + i])
+				currentRGBList[2] = 255
+				pix[i,j] = tuple(currentRGBList)
+		im.save('modifiedFrames/'+framesFolderName+'/'+filename, "JPEG")
+	return 'modifiedFrames/' + framesFolderName
+'''
+from PIL import Image
 
+'''
 
 videoData = { }
 
@@ -36,7 +57,15 @@ videoData['fps'] = raw_input("Input frames per second as integer: ")
 videoData['assignedKey'] = breakDownVideo(videoData['originalVideo'], videoData['fps'])
 videoData['downGradedVideo'] = 'downgradedVideos/' + videoData['assignedKey'] + '.mp4'
 videoData['framesFolder'] = 'frames/' + videoData['assignedKey'] + '_frames'
+videoData['modifiedFramesFolder'] = manipulateImagePixels(videoData['assignedKey'])
+
+
+
 videoData['assembledVideo'] = 'assembledVideos/' + assembleVideo(videoData['assignedKey'], videoData['fps'])
 
-#output info about video
 pprint.pprint(videoData)
+
+#output info about video
+
+
+#manipulateImagePixels('7KmGQwCy1E')
